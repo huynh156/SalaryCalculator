@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Salary Calculator</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f5f7fa; margin: 0; padding: 20px; }
+    .container { max-width: 500px; margin: 0 auto; background: #fff; padding: 20px 30px; border-radius: 12px; box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+    h2 { text-align: center; color: #333; }
+    label { font-weight: bold; display: block; margin-top: 12px; }
+    input, select { width: 100%; padding: 8px; margin-top: 5px; border-radius: 6px; border: 1px solid #ccc; }
+    button { margin-top: 15px; width: 100%; background: #007bff; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 16px; cursor: pointer; }
+    button:hover { background: #0056b3; }
+    .result { margin-top: 20px; background: #f0f4f8; border-radius: 10px; padding: 15px; font-size: 15px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>Salary Calculator</h2>
+
+    <label>Select Month:</label>
+    <select id="monthSelect">
+        <option value="1">January</option>
+        <option value="2">February</option>
+        <option value="3">March</option>
+        <option value="4">April</option>
+        <option value="5">May</option>
+        <option value="6">June</option>
+        <option value="7">July</option>
+        <option value="8">August</option>
+        <option value="9">September</option>
+        <option value="10">October</option>
+        <option value="11">November</option>
+        <option value="12">December</option>
+    </select>
+
+    <label>Base Salary (₫):</label>
+    <input type="number" id="baseSalary" value="5800000">
+    <label>Meal Allowance (₫):</label>
+    <input type="number" id="mealAllowance" value="650000">
+    <label>Parking Allowance (₫):</label>
+    <input type="number" id="parkingAllowance" value="150000">
+    <label>Overtime Hours:</label>
+    <input type="number" id="overtimeHours" placeholder="Enter OT hours">
+    <button onclick="calculateSalary()">Calculate</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+<script>
+function calculateSalary() {
+    const baseSalary = Number(document.getElementById('baseSalary').value);
+    const mealAllowance = Number(document.getElementById('mealAllowance').value);
+    const parkingAllowance = Number(document.getElementById('parkingAllowance').value);
+    const overtimeHours = Number(document.getElementById('overtimeHours').value);
+    const selectedMonth = Number(document.getElementById('monthSelect').value);
+
+    const now = new Date();
+    const year = now.getFullYear();
+
+    // Logic tính từ 21 tháng trước đến 20 tháng hiện tại
+    let startDate, endDate;
+    if (selectedMonth === 1) { // Tháng 1, lấy 21/12 năm trước đến 20/01
+        startDate = new Date(year - 1, 11, 21);
+    } else {
+        startDate = new Date(year, selectedMonth - 2, 21); // tháng trước
+    }
+    endDate = new Date(year, selectedMonth - 1, 20);
+
+    const diffTime = endDate - startDate;
+    const daysInPeriod = diffTime / (1000 * 60 * 60 * 24) + 1; // tính bao gồm cả ngày đầu và cuối
+
+    const standardWorkDays = (daysInPeriod === 31) ? 27 : 26;
+
+    const hourlyRate = baseSalary / (standardWorkDays * 8);
+    const overtimeSalary = overtimeHours * hourlyRate * 1.3;
+    const baseSalaryWithoutOT = 8 * (standardWorkDays - overtimeHours / 8) * hourlyRate;
+    const actualMealAllowance = Math.floor(mealAllowance / 26) * standardWorkDays;
+    const totalSalary = baseSalaryWithoutOT + overtimeSalary + actualMealAllowance + parkingAllowance;
+
+    const socialInsurance = baseSalary * 0.08;
+    const healthInsurance = baseSalary * 0.015;
+    const unemploymentInsurance = baseSalary * 0.01;
+    const totalDeductions = socialInsurance + healthInsurance + unemploymentInsurance;
+    const netSalary = totalSalary - totalDeductions;
+
+    document.getElementById('result').innerHTML = `
+        <strong>Salary Period:</strong> ${startDate.toLocaleDateString()} - ${endDate.toLocaleDateString()} (${daysInPeriod} days)<br>
+        <strong>Standard Work Days:</strong> ${standardWorkDays}<br>
+        <strong>Hourly Rate:</strong> ${hourlyRate.toLocaleString()} ₫<br>
+        <strong>Base Salary (no OT):</strong> ${baseSalaryWithoutOT.toLocaleString()} ₫<br>
+        <strong>Overtime Salary:</strong> ${overtimeSalary.toLocaleString()} ₫<br>
+        <strong>Meal Allowance:</strong> ${actualMealAllowance.toLocaleString()} ₫<br>
+        <strong>Total Salary:</strong> ${totalSalary.toLocaleString()} ₫<br>
+        <strong>Deductions:</strong> ${totalDeductions.toLocaleString()} ₫<br>
+        <strong>Net Salary:</strong> <span style="color:green;">${netSalary.toLocaleString()} ₫</span>
+    `;
+}
+</script>
+</body>
+</html>
